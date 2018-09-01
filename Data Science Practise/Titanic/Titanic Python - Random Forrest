@@ -1,0 +1,57 @@
+
+
+
+import pandas as pd
+import numpy as np
+
+
+def getData(csv):
+    df = pd.read_csv(csv, header=0)
+    return df
+
+
+def addGender(df):
+    #Creates a Gender column and populates it with a 0/1 value for Male/Female.
+    df['Gender'] = df['Sex'].map( {'female': 0, 'male': 1} ).astype(int)
+    return df
+    
+
+def addMedianAges(df):
+    #Creates AgeFill Column and populates it with Age
+    df['AgeFill'] = df['Age']
+    
+    #Replaces NaN age values with median age for class and gender
+    median_ages = np.zeros((2,3))
+    for i in range(0, 2):
+        for j in range(0, 3):
+            median_ages[i,j] = df[(df['Gender'] == i) & (df['Pclass'] == j+1)]['Age'].dropna().median()
+    
+    for i in range(0, 2):
+        for j in range(0, 3):
+            df.loc[ (df.Age.isnull()) & (df.Gender == i) & (df.Pclass == j+1),'AgeFill'] = median_ages[i,j]
+    
+    #Records which rows were back filled
+    df['AgeIsNull'] = pd.isnull(df.Age).astype(int)
+    
+    return df
+        
+
+def addFamilySize(df):
+    df['FamilySize'] = df['SibSp'] + df['Parch']
+    return df
+
+
+def addAgeByClass(df):
+    df['Age*Class'] = df.AgeFill * df.Pclass
+   
+
+def createCleanData(csv):
+    
+    df = getData(csv)
+    df = addGender(df)
+    df = addMedianAges(df)
+    df = addFamilySize(df)
+    df = addAgeByClass(df)
+    
+createCleanData("test.csv")
+    
